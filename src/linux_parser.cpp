@@ -10,7 +10,25 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-// DONE: An example of how to read data from the filesystem
+
+int ProcessReader(string process_cat, string proc_fname) {
+  string line;
+  string stat_cat;
+  int process_count;
+  std::ifstream stream(proc_fname);
+  if (stream.is_open()) {
+    while (std::getline(stream, line)) {
+      std::istringstream linestream(line);
+      linestream >> stat_cat;
+      if (stat_cat == process_cat) {
+        linestream >> process_count;
+      }
+    }
+  }
+  return process_count;
+}
+
+
 string LinuxParser::OperatingSystem() {
   string line;
   string key;
@@ -33,7 +51,7 @@ string LinuxParser::OperatingSystem() {
   return value;
 }
 
-// DONE: An example of how to read data from the filesystem
+
 string LinuxParser::Kernel() {
   string os, version, kernel;
   string line;
@@ -66,7 +84,7 @@ vector<int> LinuxParser::Pids() {
   return pids;
 }
 
-// TODO: Read and return the system memory utilization
+
 float LinuxParser::MemoryUtilization() {
   string mem_cat;
   double mem_tot, mem_free;
@@ -86,8 +104,18 @@ float LinuxParser::MemoryUtilization() {
   return (mem_tot - mem_free) / mem_tot;
 }
 
-// TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+
+long LinuxParser::UpTime() {
+  string line;
+  long up_time;
+  std::ifstream stream(kProcDirectory + kUptimeFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    linestream >> up_time;
+  }
+  return up_time;
+}
 
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() { return 0; }
@@ -105,11 +133,15 @@ long LinuxParser::IdleJiffies() { return 0; }
 // TODO: Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() { return {}; }
 
-// TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return 0; }
 
-// TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+int LinuxParser::TotalProcesses() {
+  return ProcessReader("processes", kProcDirectory + kStatFilename);
+}
+
+
+int LinuxParser::RunningProcesses() {
+  return ProcessReader("procs_running", kProcDirectory + kStatFilename);
+}
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
