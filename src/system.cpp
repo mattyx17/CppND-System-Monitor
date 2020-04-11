@@ -17,18 +17,25 @@ using std::vector;
 System::System() {
   os_ = LinuxParser::OperatingSystem();
   kernel_ = LinuxParser::Kernel();
+  vector<int> pids = LinuxParser::Pids();
+  for (int pid : pids) {
+    processes_.push_back(Process(pid));
+  }
 }
 
 Processor& System::Cpu() { return cpu_; }
 
-// TODO: Return a container composed of the system's processes
+
 vector<Process>& System::Processes() { return processes_; }
 
+
 string System::Kernel() { return kernel_; }
+
 
 float System::MemoryUtilization() {
   return LinuxParser::MemoryUtilization();
 }
+
 
 string System::OperatingSystem() { return os_; }
 

@@ -16,6 +16,8 @@ float Processor::Utilization() {
   }
   long totald = cpu_time.total_time - prev_total_;
   long idled = cpu_time.idle_time - prev_idle_;
+  prev_total_ = cpu_time.total_time;
+  prev_idle_ = cpu_time.idle_time;
   return CalculateRate(totald, idled);
 }
 
