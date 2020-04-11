@@ -5,6 +5,8 @@
 #include <regex>
 #include <string>
 
+#include "cpu_time.h"
+
 namespace LinuxParser {
 // Paths
 const std::string kProcDirectory{"/proc/"};
@@ -22,6 +24,7 @@ const std::string kPasswordPath{"/etc/passwd"};
 float MemoryUtilization();
 long UpTime();
 std::vector<int> Pids();
+int ProcessReader(std::string process_cat);
 int TotalProcesses();
 int RunningProcesses();
 std::string OperatingSystem();
@@ -40,7 +43,11 @@ enum CPUStates {
   kGuest_,
   kGuestNice_
 };
-std::vector<std::string> CpuUtilization();
+
+std::string CpuStats(std::string cpu_name);
+CpuTime CpuUtilization();
+long TotalCpuTime(std::string cpu_stats);
+long IdleCpuTime(std::string cpu_stats);
 long Jiffies();
 long ActiveJiffies();
 long ActiveJiffies(int pid);

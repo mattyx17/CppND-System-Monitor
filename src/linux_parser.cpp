@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "linux_parser.h"
+#include "cpu_time.h"
 
 using std::stof;
 using std::string;
@@ -11,11 +12,11 @@ using std::to_string;
 using std::vector;
 
 
-int ProcessReader(string process_cat, string proc_fname) {
+int LinuxParser::ProcessReader(string process_cat) {
   string line;
   string stat_cat;
   int process_count;
-  std::ifstream stream(proc_fname);
+  std::ifstream stream(kProcDirectory + kStatFilename);
   if (stream.is_open()) {
     while (std::getline(stream, line)) {
       std::istringstream linestream(line);
@@ -130,17 +131,61 @@ long LinuxParser::ActiveJiffies() { return 0; }
 // TODO: Read and return the number of idle jiffies for the system
 long LinuxParser::IdleJiffies() { return 0; }
 
-// TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+string LinuxParser::CpuStats(string cpu_name) {
+  string stat_cat;
+  string line;
+  std::ifstream stream(kProcDirectory + kStatFilename);
+  if (stream.is_open()) {
+    while (std::getline(stream, line)) {
+      std::istringstream linestream(line);
+      linestream >> stat_cat;
+      if (stat_cat == cpu_name) {
+        return line;
+      }
+    }
+  }
+  return line;
+}
+
+CpuTime LinuxParser::CpuUtilization() {
+  string cpu_stats = LinuxParser::CpuStats("cpu");
+  long total_time = LinuxParser::TotalCpuTime(cpu_stats);
+  long idle_time = LinuxParser::IdleCpuTime(cpu_stats);
+  return CpuTime{total_time, idle_time};
+}
+
+
+long LinuxParser::TotalCpuTime(string cpu_stats) {
+  string cpu_name;
+  long user, nice, system, idle, iowait, irq, softirq, steal, guest, guestnice;
+  std::istringstream cpustream(cpu_stats);
+  cpustream >> cpu_name >> user >> nice >> system >> idle >> iowait;
+  cpustream >> irq >> softirq >> steal >> guest >> guestnice;
+  user = user - guest;
+  nice = nice - guestnice;
+  idle = idle + iowait;
+  system = system + irq + softirq;
+  guest = guest + guestnice;
+  return user + nice + idle + system + guest;
+}
+
+
+long LinuxParser::IdleCpuTime(string cpu_stats) {
+  string cpu_name;
+  long user, nice, system, idle, iowait;
+  std::istringstream cpustream(cpu_stats);
+  cpustream >> cpu_name >> user >> nice >> system >> idle >> iowait;
+  return idle + iowait;
+}
 
 
 int LinuxParser::TotalProcesses() {
-  return ProcessReader("processes", kProcDirectory + kStatFilename);
+  return LinuxParser::ProcessReader("processes");
 }
 
 
 int LinuxParser::RunningProcesses() {
-  return ProcessReader("procs_running", kProcDirectory + kStatFilename);
+  return LinuxParser::ProcessReader("procs_running");
 }
 
 // TODO: Read and return the command associated with a process
