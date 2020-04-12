@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "linux_parser.h"
 #include "cpu_time.h"
@@ -10,6 +11,7 @@ using std::stof;
 using std::string;
 using std::to_string;
 using std::vector;
+using std::map;
 
 
 int LinuxParser::ProcessReader(string process_cat) {
@@ -65,7 +67,7 @@ string LinuxParser::Kernel() {
   return kernel;
 }
 
-// BONUS: Update this to use std::filesystem
+
 vector<int> LinuxParser::Pids() {
   vector<int> pids;
   DIR* directory = opendir(kProcDirectory.c_str());
@@ -119,27 +121,25 @@ long LinuxParser::UpTime() {
 }
 
 
-string LinuxParser::CpuStats(string cpu_name) {
+map<string, CpuTime> LinuxParser::CpuUtilization() {
   string stat_cat;
   string line;
+  map<string, CpuTime> cpu_times;
   std::ifstream stream(kProcDirectory + kStatFilename);
   if (stream.is_open()) {
     while (std::getline(stream, line)) {
       std::istringstream linestream(line);
       linestream >> stat_cat;
-      if (stat_cat == cpu_name) {
-        return line;
+      if ((stat_cat.substr(0, 3) == "cpu") && (stat_cat.size() > 3)) {
+        long total_time = LinuxParser::TotalCpuTime(line);
+        long idle_time = LinuxParser::IdleCpuTime(line);
+        string cpu_name = stat_cat.substr(3, stat_cat.size());
+        cpu_name = std::to_string(std::stoi(cpu_name) + 1);
+        cpu_times[cpu_name] = CpuTime{total_time, idle_time};
       }
     }
   }
-  return line;
-}
-
-CpuTime LinuxParser::CpuUtilization() {
-  string cpu_stats = LinuxParser::CpuStats("cpu");
-  long total_time = LinuxParser::TotalCpuTime(cpu_stats);
-  long idle_time = LinuxParser::IdleCpuTime(cpu_stats);
-  return CpuTime{total_time, idle_time};
+  return cpu_times;
 }
 
 

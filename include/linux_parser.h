@@ -4,6 +4,7 @@
 #include <fstream>
 #include <regex>
 #include <string>
+#include <map>
 
 #include "cpu_time.h"
 
@@ -31,21 +32,7 @@ std::string OperatingSystem();
 std::string Kernel();
 
 // CPU
-enum CPUStates {
-  kUser_ = 0,
-  kNice_,
-  kSystem_,
-  kIdle_,
-  kIOwait_,
-  kIRQ_,
-  kSoftIRQ_,
-  kSteal_,
-  kGuest_,
-  kGuestNice_
-};
-
-std::string CpuStats(std::string cpu_name);
-CpuTime CpuUtilization();
+std::map<std::string, CpuTime> CpuUtilization();
 long TotalCpuTime(std::string cpu_stats);
 long IdleCpuTime(std::string cpu_stats);
 long ActiveTime(int pid);

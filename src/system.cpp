@@ -4,17 +4,19 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <unordered_map>
+#include <map>
 
 #include "process.h"
 #include "processor.h"
 #include "system.h"
 #include "linux_parser.h"
+#include "cpu_time.h"
 
 using std::set;
 using std::size_t;
 using std::string;
 using std::vector;
+using std::map;
 
 vector<Process> CleanProcesses(vector<Process> processes) {
   vector<int> pids = LinuxParser::Pids();
@@ -39,13 +41,27 @@ vector<Process> CleanProcesses(vector<Process> processes) {
 System::System() {
   os_ = LinuxParser::OperatingSystem();
   kernel_ = LinuxParser::Kernel();
+
   vector<int> pids = LinuxParser::Pids();
   for (int pid : pids) {
     processes_.push_back(Process(pid));
   }
+
+  map<string, CpuTime> cpu_times = LinuxParser::CpuUtilization();
+  for (std::pair<string, CpuTime> p : cpu_times) {
+    cpus_.push_back(Processor(p.first, p.second));
+  }
 }
 
-Processor& System::Cpu() { return cpu_; }
+vector<Processor>& System::Cpus() {
+  map<string, CpuTime> cpu_times = LinuxParser::CpuUtilization();
+  for (Processor& cpu : cpus_) {
+    if (cpu_times.find(cpu.Name()) != cpu_times.end()) {
+      cpu.UpdateUtilization(cpu_times[cpu.Name()]);
+    }
+  }
+  return cpus_;
+}
 
 
 vector<Process>& System::Processes() {
