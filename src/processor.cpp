@@ -3,6 +3,12 @@
 #include "cpu_time.h"
 
 
+float CalculateRate(long total_time, long idle_time) {
+  double active_time = total_time - idle_time;
+  return active_time / total_time;
+}
+
+
 Processor::Processor() {
   CpuTime cpu_time = LinuxParser::CpuUtilization();
   prev_total_ = cpu_time.total_time;
@@ -19,10 +25,4 @@ float Processor::Utilization() {
   prev_total_ = cpu_time.total_time;
   prev_idle_ = cpu_time.idle_time;
   return CalculateRate(totald, idled);
-}
-
-
-float CalculateRate(long total_time, long idle_time) {
-  double active_time = total_time - idle_time;
-  return active_time / total_time;
 }

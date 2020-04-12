@@ -118,18 +118,6 @@ long LinuxParser::UpTime() {
   return up_time;
 }
 
-// TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
-
-// TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
-
-// TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
-
-// TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
 
 string LinuxParser::CpuStats(string cpu_name) {
   string stat_cat;
@@ -169,7 +157,6 @@ long LinuxParser::TotalCpuTime(string cpu_stats) {
   return user + nice + idle + system + guest;
 }
 
-
 long LinuxParser::IdleCpuTime(string cpu_stats) {
   string cpu_name;
   long user, nice, system, idle, iowait;
@@ -177,6 +164,26 @@ long LinuxParser::IdleCpuTime(string cpu_stats) {
   cpustream >> cpu_name >> user >> nice >> system >> idle >> iowait;
   return idle + iowait;
 }
+
+
+long LinuxParser::ActiveTime(int pid) {
+  string other_data;
+  long utime, stime, cutime, cstime;
+  string line;
+  string spid = std::to_string(pid) + "/";
+  std::ifstream stream(kProcDirectory + spid + kStatFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    for (int i=0; i < 13; i++) {
+      linestream >> other_data;
+    }
+    linestream >> utime >> stime >> cutime >> cstime;
+  }
+  return (utime + stime + cutime + cstime) / sysconf(_SC_CLK_TCK);
+}
+
+
 
 
 int LinuxParser::TotalProcesses() {

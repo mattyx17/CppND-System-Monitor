@@ -48,10 +48,7 @@ std::string CpuStats(std::string cpu_name);
 CpuTime CpuUtilization();
 long TotalCpuTime(std::string cpu_stats);
 long IdleCpuTime(std::string cpu_stats);
-long Jiffies();
-long ActiveJiffies();
-long ActiveJiffies(int pid);
-long IdleJiffies();
+long ActiveTime(int pid);
 
 // Processes
 std::string Command(int pid);

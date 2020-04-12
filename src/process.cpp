@@ -12,13 +12,35 @@ using std::to_string;
 using std::vector;
 
 
-Process::Process(int pid) : pid_(pid) {}
+Process::Process(int pid) {
+  pid_ = pid;
+  prev_active_time_ = LinuxParser::ActiveTime(pid_);
+  double system_uptime = LinuxParser::UpTime();
+  double process_uptime = LinuxParser::UpTime(pid_);
+  prev_seconds_ = system_uptime - process_uptime;
+}
 
 
 int Process::Pid() { return pid_; }
 
-// TODO: Return this process's CPU utilization
-float Process::CpuUtilization() { return 0; }
+
+void Process::SetCpuData() {
+  double active_time = LinuxParser::ActiveTime(pid_);
+  double system_uptime = LinuxParser::UpTime();
+  double process_uptime = LinuxParser::UpTime(pid_);
+  double seconds = system_uptime - process_uptime;
+  actived_ = active_time - prev_active_time_;
+  secondsd_ = seconds - prev_seconds_;
+  prev_active_time_ = active_time;
+  prev_seconds_ = seconds;
+}
+
+float Process::CpuUtilization() const {
+  if (secondsd_ == 0 || actived_ == 0) {
+    return prev_active_time_ / prev_seconds_;
+  }
+  return actived_ / secondsd_;
+}
 
 
 string Process::Command() {
@@ -40,6 +62,7 @@ long int Process::UpTime() {
   return LinuxParser::UpTime(pid_);
 }
 
-// TODO: Overload the "less than" comparison operator for Process objects
-// REMOVE: [[maybe_unused]] once you define the function
-bool Process::operator<(Process const& a[[maybe_unused]]) const { return true; }
+
+bool Process::operator<(Process const& a) const {
+  return this->CpuUtilization() < a.CpuUtilization();
+}
