@@ -219,7 +219,7 @@ string LinuxParser::Ram(int pid) {
       linestream >> status_cat;
       if (status_cat == "VmSize:") {
         linestream >> ram;
-        ram = ram / 1000;
+        ram = ram / 1024;
         return std::to_string(ram);
       }
     }
